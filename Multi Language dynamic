@@ -1,0 +1,172 @@
+// DynamicInputComponent.js
+import React from 'react';
+
+const DynamicInputComponent = ({ formData, setFormData, tabId, inputFields }) => {
+  const handleInputChange = (e, fieldId) => {
+    setFormData({
+      ...formData,
+      [tabId]: {
+        ...formData[tabId],
+        inputValues: {
+          ...formData[tabId]?.inputValues,
+          [fieldId]: e.target.value,
+        },
+      },
+    });
+  };
+
+  return (
+    <div>
+      {inputFields.map((field) => (
+        <div key={field.id}>
+          <label>{field.label}:</label>
+          <input
+            type="text"
+            value={formData[tabId]?.inputValues?.[field.id] || ''}
+            onChange={(e) => handleInputChange(e, field.id)}
+          />
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// DynamicOptionsComponent.js
+import React from 'react';
+import Select from 'react-select';
+
+const DynamicOptionsComponent = ({ formData, setFormData, tabId, optionsFields }) => {
+  const options = optionsFields.map((option) => ({ value: option.id, label: option.label }));
+
+  const handleSelectChange = (selectedOption) => {
+    setFormData({
+      ...formData,
+      [tabId]: {
+        ...formData[tabId],
+        selectedOption,
+      },
+    });
+  };
+
+  return (
+    <div>
+      <label>Select an option:</label>
+      <Select
+        options={options}
+        value={formData[tabId]?.selectedOption || null}
+        onChange={handleSelectChange}
+      />
+    </div>
+  );
+};
+
+// DynamicTabComponent.js
+import React from 'react';
+import DynamicInputComponent from './DynamicInputComponent';
+import DynamicOptionsComponent from './DynamicOptionsComponent';
+
+const DynamicTabComponent = ({ tabData, formData, setFormData }) => {
+  return (
+    <div>
+      <h3>{tabData.title}</h3>
+      <DynamicInputComponent
+        formData={formData}
+        setFormData={setFormData}
+        tabId={tabData.id}
+        inputFields={tabData.inputFields}
+      />
+      <DynamicOptionsComponent
+        formData={formData}
+        setFormData={setFormData}
+        tabId={tabData.id}
+        optionsFields={tabData.optionsFields}
+      />
+    </div>
+  );
+};
+
+// DynamicParentComponent.js
+import React, { useState } from 'react';
+import DynamicTabComponent from './DynamicTabComponent';
+
+const DynamicParentComponent = () => {
+  const [activeTab, setActiveTab] = useState(0);
+  const [formData, setFormData] = useState({});
+  const tabsData = [
+    {
+      id: 1,
+      title: 'Tab 1',
+      inputFields: [
+        { id: 'input1', label: 'Input 1' },
+        { id: 'input2', label: 'Input 2' },
+        // Add more dynamic input fields as needed
+      ],
+      optionsFields: [
+        { id: 'option1', label: 'Option 1' },
+        { id: 'option2', label: 'Option 2' },
+        // Add more dynamic options as needed
+      ],
+    },
+    {
+      id: 2,
+      title: 'Tab 2',
+      inputFields: [
+        // Different input fields for Tab 2
+      ],
+      optionsFields: [
+        // Different options for Tab 2
+      ],
+    },
+    // Add more dynamic tabs as needed
+  ];
+
+  const handleTabChange = (tabIndex) => {
+    setActiveTab(tabIndex);
+  };
+
+  const handleSubmit = () => {
+    // Basic validation example
+    const currentTabData = formData[activeTab + 1];
+    if (!currentTabData || !currentTabData.inputValues || !currentTabData.selectedOption) {
+      alert('Please fill in all fields.');
+      return;
+    }
+
+    // Gather all form data and submit
+    console.log('Submit data:', formData);
+    // Add your submission logic here, e.g., send data to the server
+  };
+
+  return (
+    <div>
+      {/* Dynamic tabs */}
+      <ul className="nav nav-tabs">
+        {tabsData.map((tab, index) => (
+          <li key={index} className={`nav-item ${activeTab === index && 'active'}`}>
+            <a className="nav-link" onClick={() => handleTabChange(index)}>
+              {tab.title}
+            </a>
+          </li>
+        ))}
+      </ul>
+
+      {/* Dynamic tab content */}
+      <div className="tab-content">
+        {tabsData.map((tab, index) => (
+          <div key={index} className={`tab-pane ${activeTab === index && 'active'}`}>
+            <DynamicTabComponent
+              tabData={tab}
+              formData={formData}
+              setFormData={(data) => setFormData({ ...formData, [tab.id]: data })}
+            />
+          </div>
+        ))}
+      </div>
+
+      {/* Submit button */}
+      <button onClick={handleSubmit}>Submit</button>
+    </div>
+  );
+};
+
+export default DynamicParentComponent;
